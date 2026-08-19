@@ -1,0 +1,54 @@
+FROM debian:13
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    container=podman
+
+# Ubuntu images strip man/doc via this file. Debian 13 does not ship it.
+# Remove it when present so installs keep documentation.
+RUN rm -f /etc/dpkg/dpkg.cfg.d/excludes
+
+# Reinstall base packages first so pages dropped by an exclude come back.
+# Debian 13 dropped the dnsutils transitional package; bind9-dnsutils is dig/nslookup.
+RUN apt-get update \
+ && apt-get install -y --reinstall --no-install-recommends \
+      $(dpkg-query -W -f '${binary:Package}\n') \
+ && apt-get install -y --no-install-recommends \
+      systemd \
+      systemd-sysv \
+      man-db \
+      manpages \
+      nginx \
+      openssh-server \
+      cron \
+      iproute2 \
+      nftables \
+      bind9-dnsutils \
+      curl \
+      lsof \
+      strace \
+      tcpdump \
+      net-tools \
+      vim \
+      nano \
+      less \
+      python3 \
+      rsyslog \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+# These units fail inside a container and mark the box degraded.
+RUN systemctl mask \
+      systemd-udevd.service \
+      systemd-udevd-kernel.socket \
+      systemd-udevd-control.socket \
+      systemd-modules-load.service \
+      getty@tty1.service \
+      console-getty.service \
+ && systemctl enable \
+      nginx.service \
+      ssh.service \
+      cron.service \
+      rsyslog.service
+
+STOPSIGNAL SIGRTMIN+3
+CMD ["/sbin/init"]

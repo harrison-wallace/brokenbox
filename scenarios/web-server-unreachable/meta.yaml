@@ -1,0 +1,10 @@
+id: web-server-unreachable
+title: Web server unreachable
+difficulty: 2
+par_seconds: 300
+network: none
+tags: [systemd, networking, nginx]
+variants: 1
+hints:
+  - See which TCP ports are actually listening.
+  - Compare the enabled site's listen directives with port 80.
